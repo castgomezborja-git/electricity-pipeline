@@ -7,7 +7,9 @@ authors = [
     { name = "Borja Castano", email = "castgomezborja@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "requests>=2.34.2",
+]
 
 [project.scripts]
 electricity-pipeline = "electricity_pipeline:main"
