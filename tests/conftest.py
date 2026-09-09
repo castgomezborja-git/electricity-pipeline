@@ -1,9 +1,9 @@
 import pytest
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import Session
 from testcontainers.community.postgres import PostgresContainer
 
 from electricity_pipeline.models import Base
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import Session
 
 
 @pytest.fixture(scope="session")
