@@ -21,7 +21,7 @@ def parse_pvpc_prices(raw_data: dict) -> list[PVPCPrice]:
     """Convierte los valores PVPC del JSON crudo en instancias validadas."""
     values = _find_indicator_values(raw_data, indicator_id="1001")
     return [
-        PVPCPrice(datetime=item["datetime"], price_eur_mwh=item["value"])
+        PVPCPrice(price_datetime=item["datetime"], price_eur_mwh=item["value"])
         for item in values
     ]
 
@@ -30,6 +30,6 @@ def parse_spot_prices(raw_data: dict) -> list[SpotMarketPrice]:
     """Convierte los valores de mercado spot del JSON crudo en instancias validadas."""
     values = _find_indicator_values(raw_data, indicator_id="600")
     return [
-        SpotMarketPrice(datetime=item["datetime"], price_eur_mwh=item["value"])
+        SpotMarketPrice(price_datetime=item["datetime"], price_eur_mwh=item["value"])
         for item in values
     ]

@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 
 class ElectricityPriceBase(BaseModel):
-    datetime: datetime
+    price_datetime: datetime
     price_eur_mwh: Decimal
 
 
