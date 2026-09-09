@@ -13,7 +13,9 @@ class ElectricityPriceModel(Base):
     __abstract__ = True
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    price_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    price_datetime: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), unique=True
+    )
     price_eur_mwh: Mapped[Decimal] = mapped_column(Numeric(10, 2))
 
 
