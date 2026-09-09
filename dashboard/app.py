@@ -37,8 +37,6 @@ with tab_hoy:
             hora = fila["price_datetime_local"].strftime("%H:%M")
             st.metric(label=hora, value=f"{fila['price_eur_mwh']:.2f} €/MWh")
 
-    st.dataframe(df_hoy)  # temporal, solo para verificar que llegan datos
-
 
 with tab_historico:
     st.write("Pendiente")
