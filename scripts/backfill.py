@@ -28,7 +28,7 @@ while dia_actual <= FECHA_FIN:
             load_spot_prices(spot, session)
 
         print(f"  OK: {len(pvpc)} PVPC, {len(spot)} spot")
-    except Exception as error:
+    except Exception as error:  # noqa: BLE001 — backfill debe continuar ante cualquier fallo puntual de un día
         print(f"  ERROR en {dia_actual}: {error}")
 
     dia_actual += timedelta(days=1)
