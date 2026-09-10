@@ -1,3 +1,6 @@
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -5,7 +8,7 @@ from sqlalchemy import create_engine, text
 
 from electricity_pipeline.config import Settings
 
-from datetime import date, timedelta
+MADRID_TZ = ZoneInfo("Europe/Madrid")
 
 settings = Settings()
 engine = create_engine(settings.database_url)
@@ -69,7 +72,7 @@ with tab_hoy:
 
 
 with tab_historico:
-    hoy = date.today()
+    hoy = datetime.now(tz=MADRID_TZ).date()
     rango = st.date_input(
         "Rango de fechas",
         value=(hoy - timedelta(days=7), hoy),
