@@ -5,6 +5,8 @@ from sqlalchemy import create_engine, text
 
 from electricity_pipeline.config import Settings
 
+from datetime import date, timedelta
+
 settings = Settings()
 engine = create_engine(settings.database_url)
 
@@ -59,12 +61,77 @@ with tab_hoy:
     )  # Bloquear zoom y arrastre en cada eje
     fig.update_traces(
         hovertemplate="Hora: %{x|%H:%M}<br>Precio: %{y:.4f} €/kWh<extra></extra>"
-    )  # Modificar el ttooltip de las barras para que muestre la hora y el precio en €/kWh
+    )  # Modificar el tooltip de las barras para que muestre la hora y el precio en €/kWh
 
     st.plotly_chart(
-        fig, use_container_width=True, config={"displayModeBar": False}
+        fig, width="stretch", config={"displayModeBar": False}
     )  # Oculta la barrra de herrramientas de plotly
 
 
 with tab_historico:
-    st.write("Pendiente")
+    hoy = date.today()
+    rango = st.date_input(
+        "Rango de fechas",
+        value=(hoy - timedelta(days=7), hoy),
+        max_value=hoy,
+    )
+
+    if len(rango) != 2:
+        st.stop()
+
+    fecha_inicio, fecha_fin = rango
+
+    # Consulta a la base de datos para obtener los precios PVPC históricos
+    query_pvpc = text("""
+        SELECT
+            price_datetime AT TIME ZONE 'Europe/Madrid' AS price_datetime_local,
+            price_eur_mwh
+        FROM pvpc_prices
+        WHERE (price_datetime AT TIME ZONE 'Europe/Madrid')::date BETWEEN :inicio AND :fin
+        ORDER BY price_datetime
+    """)
+    df_pvpc_historico = pd.read_sql(
+        query_pvpc, engine, params={"inicio": fecha_inicio, "fin": fecha_fin}
+    )
+    df_pvpc_historico["price_eur_kwh"] = df_pvpc_historico["price_eur_mwh"] / 1000
+
+    # Consulta a la base de datos para obtener los precios SPOT históricos
+    query_spot = text("""
+        SELECT
+            price_datetime AT TIME ZONE 'Europe/Madrid' AS price_datetime_local,
+            price_eur_mwh
+        FROM spot_market_prices
+        WHERE (price_datetime AT TIME ZONE 'Europe/Madrid')::date BETWEEN :inicio AND :fin
+        ORDER BY price_datetime
+    """)
+    df_spot_historico = pd.read_sql(
+        query_spot, engine, params={"inicio": fecha_inicio, "fin": fecha_fin}
+    )
+    df_spot_historico["price_eur_kwh"] = df_spot_historico["price_eur_mwh"] / 1000
+
+    df_pvpc_historico["serie"] = "PVPC"
+    df_spot_historico["serie"] = "Mercado spot"
+
+    df_historico = pd.concat(
+        [
+            df_pvpc_historico[["price_datetime_local", "price_eur_kwh", "serie"]],
+            df_spot_historico[["price_datetime_local", "price_eur_kwh", "serie"]],
+        ],
+        ignore_index=True,
+    )
+
+    fig_historico = px.line(
+        df_historico,
+        x="price_datetime_local",
+        y="price_eur_kwh",
+        color="serie",
+        color_discrete_map={"PVPC": "#2ecc71", "Mercado spot": "#e67e22"},
+        labels={"price_datetime_local": "Fecha", "price_eur_kwh": "€/kWh", "serie": ""},
+    )
+    fig_historico.update_traces(
+        hovertemplate="%{fullData.name}<br>%{x|%d/%m %H:%M}<br>%{y:.4f} €/kWh<extra></extra>"
+    )
+
+    fig_historico.update_layout(hovermode="x unified")
+
+    st.plotly_chart(fig_historico, width="stretch")
