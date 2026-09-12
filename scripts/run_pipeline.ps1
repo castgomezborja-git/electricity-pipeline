@@ -1,5 +1,7 @@
 Set-Location "E:\dev\electricity-pipeline"
 
+docker compose up -d
+
 $fecha = Get-Date -Format "yyyyMMdd"
 $logFile = "logs\pipeline_$fecha.log"
 

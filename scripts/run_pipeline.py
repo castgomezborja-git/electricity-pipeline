@@ -20,7 +20,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 MADRID_TZ = ZoneInfo("Europe/Madrid")
 
 
@@ -42,15 +41,19 @@ with Session(engine) as session:
     fecha_inicio = determinar_fecha_inicio(session)
 
 hoy = datetime.now(tz=MADRID_TZ).date()
+fecha_fin = hoy + timedelta(days=1)  # REE publica el día siguiente por la tarde
 
-if fecha_inicio > hoy:
-    logger.info("Ya hay datos cargados hasta hoy, nada que hacer")
+if fecha_inicio > fecha_fin:
+    logger.info("Ya hay datos cargados hasta mañana, nada que hacer")
 else:
     dia_actual = fecha_inicio
-    while dia_actual <= hoy:
+    while dia_actual <= fecha_fin:
         logger.info(f"Cargando {dia_actual}...")
         try:
-            data = fetch_prices(dia_actual, dia_actual, settings)
+            fecha_ancla = min(
+                dia_actual, hoy
+            )  # el PVPC solo aparece si el rango incluye "hoy" o antes
+            data = fetch_prices(fecha_ancla, dia_actual, settings)
             pvpc = parse_pvpc_prices(data)
             spot = parse_spot_prices(data)
 

@@ -4,9 +4,11 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, func, select, text
+from sqlalchemy.orm import Session
 
 from electricity_pipeline.config import Settings
+from electricity_pipeline.models import PVPCPriceModel
 
 MADRID_TZ = ZoneInfo("Europe/Madrid")
 
@@ -73,10 +75,22 @@ with tab_hoy:
 
 with tab_historico:
     hoy = datetime.now(tz=MADRID_TZ).date()
+
+    with Session(engine) as session:
+        fecha_min_disponible = session.execute(
+            select(func.min(PVPCPriceModel.price_datetime))
+        ).scalar()
+
+    if fecha_min_disponible is not None:
+        fecha_min_disponible = fecha_min_disponible.astimezone(MADRID_TZ).date()
+    else:
+        fecha_min_disponible = hoy
+
     rango = st.date_input(
         "Rango de fechas",
-        value=(hoy - timedelta(days=7), hoy),
-        max_value=hoy,
+        value=(fecha_min_disponible, hoy + timedelta(days=1)),
+        min_value=fecha_min_disponible,
+        max_value=hoy + timedelta(days=1),
     )
 
     if len(rango) != 2:
